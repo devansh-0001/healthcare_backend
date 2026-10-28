@@ -1,0 +1,663 @@
+{
+  "info": {
+    "_postman_id": "synora-healthcare-api-collection",
+    "name": "Synora Healthcare Backend API",
+    "description": "Production-ready Postman collection for the Synora Healthcare Backend API, featuring JWT authentication, patient management, doctor directory, and patient-doctor care coordination mappings.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "patientId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "doctorId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "mappingId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Devansh\",\n  \"email\": \"dev@example.com\",\n  \"password\": \"StrongPass#123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register", ""]
+            },
+            "description": "Register a new user account with lowercase email and minimum 8-character password."
+          },
+          "response": []
+        },
+        {
+          "name": "Login (Get JWT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.access) {",
+                  "    pm.collectionVariables.set('accessToken', jsonData.access);",
+                  "    pm.collectionVariables.set('refreshToken', jsonData.refresh);",
+                  "    console.log('JWT Access Token saved to collection variables.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"dev@example.com\",\n  \"password\": \"StrongPass#123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login", ""]
+            },
+            "description": "Authenticate user credentials and receive access (30 min) and refresh (1 day) JWT tokens."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Access Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.access) {",
+                  "    pm.collectionVariables.set('accessToken', jsonData.access);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/token/refresh/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "token", "refresh", ""]
+            },
+            "description": "Obtain a fresh access token using the refresh token."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Patients",
+      "item": [
+        {
+          "name": "Create Patient",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.collectionVariables.set('patientId', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Eleanor Vance\",\n  \"age\": 42,\n  \"gender\": \"female\",\n  \"phone\": \"+15551234567\",\n  \"address\": \"742 Evergreen Terrace, Springfield\",\n  \"medical_history\": \"Stage 1 Hypertension, pollen allergy\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/patients/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patients", ""]
+            },
+            "description": "Create a new patient record owned by the authenticated user."
+          },
+          "response": []
+        },
+        {
+          "name": "List User's Patients",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/patients/?page=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patients", ""],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Retrieve paginated list of patients belonging to the requesting user."
+          },
+          "response": []
+        },
+        {
+          "name": "Retrieve Patient by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/patients/{{patientId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patients", "{{patientId}}", ""]
+            },
+            "description": "Retrieve a single patient by ID. Returns 404 if not found or owned by another user."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Patient",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Eleanor Vance\",\n  \"age\": 43,\n  \"gender\": \"female\",\n  \"phone\": \"+15551234567\",\n  \"address\": \"742 Evergreen Terrace, Springfield\",\n  \"medical_history\": \"Hypertension managed with medication\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/patients/{{patientId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patients", "{{patientId}}", ""]
+            },
+            "description": "Update a patient record. Owner only."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Patient",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/patients/{{patientId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patients", "{{patientId}}", ""]
+            },
+            "description": "Delete a patient record. Automatically cascades and deletes associated care mappings."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Doctors",
+      "item": [
+        {
+          "name": "Create Doctor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.collectionVariables.set('doctorId', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sarah Jenkins\",\n  \"specialization\": \"Cardiology\",\n  \"email\": \"sarah.jenkins@synora.clinic\",\n  \"phone\": \"+15551112233\",\n  \"experience_years\": 15,\n  \"hospital\": \"Synora Heart Institute\",\n  \"is_available\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", ""]
+            },
+            "description": "Add a new physician to the directory. Creator is automatically recorded."
+          },
+          "response": []
+        },
+        {
+          "name": "List All Doctors",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/?page=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", ""],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "List all doctors across the shared directory."
+          },
+          "response": []
+        },
+        {
+          "name": "Filter Doctors by Specialization",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/?specialization=Cardiology",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", ""],
+              "query": [
+                {
+                  "key": "specialization",
+                  "value": "Cardiology"
+                }
+              ]
+            },
+            "description": "Filter doctors by specialization."
+          },
+          "response": []
+        },
+        {
+          "name": "Search Doctors",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/?search=Sarah",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", ""],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Sarah"
+                }
+              ]
+            },
+            "description": "Search doctor directory by name, specialization, or clinic."
+          },
+          "response": []
+        },
+        {
+          "name": "Retrieve Doctor by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/{{doctorId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", "{{doctorId}}", ""]
+            },
+            "description": "Retrieve doctor profile details."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Doctor",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dr. Sarah Jenkins MD\",\n  \"specialization\": \"Cardiology\",\n  \"email\": \"sarah.jenkins@synora.clinic\",\n  \"phone\": \"+15551112233\",\n  \"experience_years\": 16,\n  \"hospital\": \"Synora Heart Institute\",\n  \"is_available\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/{{doctorId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", "{{doctorId}}", ""]
+            },
+            "description": "Update doctor details. Creator only."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Doctor",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/{{doctorId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", "{{doctorId}}", ""]
+            },
+            "description": "Delete a doctor from the directory. Creator only."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Patient-Doctor Mappings",
+      "item": [
+        {
+          "name": "Assign Doctor to Patient",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.collectionVariables.set('mappingId', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient\": {{patientId}},\n  \"doctor\": {{doctorId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mappings/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mappings", ""]
+            },
+            "description": "Assign a doctor to a patient. Patient must belong to requesting user. Duplicate assignments return 400."
+          },
+          "response": []
+        },
+        {
+          "name": "List User's Patient Mappings",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/mappings/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mappings", ""]
+            },
+            "description": "List all active doctor mappings across the requesting user's patients."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Patient's Assigned Doctors",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/mappings/{{patientId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mappings", "{{patientId}}", ""]
+            },
+            "description": "Retrieve all doctors assigned to a specific patient. Returns 404 if patient is not owned by user."
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Assignment (Delete Mapping)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/mappings/{{mappingId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mappings", "{{mappingId}}", ""]
+            },
+            "description": "Remove a doctor assignment from a patient. Removes only the mapping record; patient and doctor remain intact."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. System & Stats",
+      "item": [
+        {
+          "name": "Get Platform Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/stats/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stats", ""]
+            },
+            "description": "Public endpoint providing platform totals for patients, specialists, departments, and satisfaction rating."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
