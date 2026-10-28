@@ -1,0 +1,33 @@
+# Environment variables
+.env
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Database
+*.sqlite3
+db.sqlite3
+
+# Logs & Coverage
+*.log
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Static & media root
+/staticfiles/
+/media/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
